@@ -1,7 +1,27 @@
-fastapi
-uvicorn
-python-multipart
-numpy
-opencv-python-headless
-face-recognition
+FROM python:3.9-slim
 
+# Install CMake and compilers (needed for dlib if we build it, or system libs)
+RUN apt-get update && apt-get install -y \
+    cmake \
+    build-essential \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libgtk-3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+WORKDIR /app
+COPY requirements.txt .
+
+# Install dlib first (it's heavy)
+RUN pip install dlib
+
+# Install the rest
+RUN pip install -r requirements.txt
+
+# Copy your code
+COPY main.py .
+
+# Command to run
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
